@@ -5,20 +5,20 @@ def sqlite_creating():
     try:
         sqlite_connection = sqlite3.connect('sqlite_python.db')
         cursor = sqlite_connection.cursor()
-        print("База данных создана и успешно подключена к SQLite")
+        print("Created DB and connected to SQLite")
 
         sqlite_select_query = "select sqlite_version();"
         cursor.execute(sqlite_select_query)
         record = cursor.fetchall()
-        print("Версия базы данных SQLite: ", record)
+        print("SQLite version: ", record)
         cursor.close()
 
     except sqlite3.Error as error:
-        print("Не удалось подключиться к sqlite", error)
+        print("Cannot connect to DB", error)
     finally:
         if (sqlite_connection):
             sqlite_connection.close()
-            print("Соединение с SQLite закрыто")
+            print("Connection closed")
 
 
 def create_table(table_name, list_of_headers):
@@ -30,12 +30,11 @@ def create_table(table_name, list_of_headers):
             sqlite_create_table_query += ', \ncolumn_' + str(column_name) +  ' TEXT NOT NULL'
         sqlite_create_table_query += ');'
 
-        print(sqlite_create_table_query)
         cursor = sqlite_connection.cursor()
-        print("База данных подключена к SQLite")
+        print("Connected to SQLite")
         cursor.execute(sqlite_create_table_query)
         sqlite_connection.commit()
-        print("Таблица SQLite создана")
+        print("Table Created")
 
         cursor.close()
 
@@ -62,12 +61,12 @@ def insert_values(table_name, list_of_headers, list_of_meanings):
         for column_name in list_of_headers:
             sqlite_insert_table_query += ', column_' + str(column_name)
         sqlite_insert_table_query += ') VALUES '
+        id = take_last_id(table_name)
 
         for line in range(0, len(list_of_meanings)):
-            #print('list = ', list_of_meanings[line])
             if str(list_of_meanings[line][0]) != 'nan':
-                sqlite_insert_table_query += '(' + str(line)
-                print("'", list_of_meanings[line][0], "'", sep='')
+                sqlite_insert_table_query += '(' + str(id)
+                id += 1
                 for meaning in range(len(list_of_meanings[line])):
                     sqlite_insert_table_query += ", '" + str(list_of_meanings[line][meaning])+ "' "
                 sqlite_insert_table_query += "),\n"
@@ -75,7 +74,6 @@ def insert_values(table_name, list_of_headers, list_of_meanings):
         sqlite_insert_table_query = sqlite_insert_table_query[:-2]
         sqlite_insert_table_query += ';'
 
-        print(sqlite_insert_table_query)
         cursor = sqlite_connection.cursor()
         print("Connected")
         cursor.execute(sqlite_insert_table_query)
@@ -85,8 +83,20 @@ def insert_values(table_name, list_of_headers, list_of_meanings):
         cursor.close()
 
     except sqlite3.Error as error:
-        print("Ошибка при подключении к sqlite", error)
+        print("Error with connection to sqlite", error)
     finally:
         if (sqlite_connection):
             sqlite_connection.close()
-            print("Соединение с SQLite закрыто")
+            print("Connection closed")
+
+
+def take_last_id(table_name):
+    sqlite_connection = sqlite3.connect('sqlite_python.db')
+    sqlite_insert_table_query = '''SELECT max(id) FROM ''' + table_name + ''' ; '''
+    cursor = sqlite_connection.cursor()
+    cursor.execute(sqlite_insert_table_query)
+    max_id = cursor.fetchall()[0][0]
+    sqlite_connection.commit()
+    if max_id == None:
+        return 0
+    return max_id+1
