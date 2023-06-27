@@ -4,12 +4,11 @@ import pathlib
 
 table_name = 'consolid_table'
 
-'''
+
 def clear_db():
     # First start to create table
     drop_table(table_name)
-    create_table('consolid_table', df_ord.columns.tolist())
-'''
+
 
 def parsing_directory(path):
     dir = pathlib.Path(path)
